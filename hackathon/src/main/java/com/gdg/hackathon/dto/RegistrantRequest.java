@@ -1,6 +1,7 @@
 package com.gdg.hackathon.dto;
 
 import com.gdg.hackathon.domain.Position;
+import com.gdg.hackathon.domain.Registrant;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,7 +10,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.antlr.v4.runtime.misc.NotNull;
 
 @Getter
 @Setter
@@ -28,7 +28,7 @@ public class RegistrantRequest {
     private String major;
 
     @NotBlank(message = "전화번호는 필수입니다.")
-    @Size(min = 10, max = 15) // 전화번호 길이에 대한 제약 조건 예시
+    @Size(min = 10, max = 15)
     @Column(nullable = false, unique = true)
     private String phoneNumber;
 
@@ -48,4 +48,16 @@ public class RegistrantRequest {
     @Email(message = "이메일 형식을 확인해주세요.")
     @Column(nullable = false, unique = true)
     private String email;
+
+    public Registrant to() {
+        return new Registrant(
+                this.studentId,
+                this.name,
+                this.major,
+                this.phoneNumber,
+                this.position,
+                this.githubId,
+                this.teamName,
+                this.email);
+    }
 }
