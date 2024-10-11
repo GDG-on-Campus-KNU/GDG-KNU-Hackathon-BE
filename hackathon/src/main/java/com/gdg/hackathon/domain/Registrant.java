@@ -33,4 +33,20 @@ public class Registrant {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    public Registrant() {
+
+    }
+
+    public Registrant(Long studentId, String name, String major, String phoneNumber, Position position, String githubId, String teamName, String email) {
+        this.studentId = studentId;
+        this.name = name;
+        this.major = major;
+        this.phoneNumber = phoneNumber;
+        this.position = position;
+        this.githubId = githubId;
+        this.teamName = teamName;
+        this.email = email;
+    }
+
 }
