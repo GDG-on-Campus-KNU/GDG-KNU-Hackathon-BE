@@ -35,7 +35,7 @@ public class RegistrantService {
         }
 
         if(!isRegistrationDuplicate(request.getStudentId())){
-            return new ResponseMessage(HttpStatus.CONFLICT.value(), "이미 신청한 학번입니다.")
+            return new ResponseMessage(HttpStatus.CONFLICT.value(), "이미 신청한 학번입니다.");
         }
         registrantRepository.save(request.to());
         sendRegisterEmail(request.getEmail());
