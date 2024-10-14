@@ -1,15 +1,18 @@
 package com.gdg.hackathon.service;
 
-import com.gdg.hackathon.domain.Registrant;
 import com.gdg.hackathon.dto.RegistrantRequest;
+import com.gdg.hackathon.exception.ResponseMessage;
 import com.gdg.hackathon.repository.RegistrantRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -18,22 +21,41 @@ public class RegistrantService {
     private RegistrantRepository registrantRepository;
     private final JavaMailSender emailSender;
 
-    public String register(RegistrantRequest request)throws BadRequestException{
+    public ResponseMessage register(RegistrantRequest request)throws BadRequestException{
         request.setPhoneNumber(removeHyphen(request.getPhoneNumber()));
-        validation(request);
+        isRegistrationDuplicate(request);
         sendRegisterEmail(request.getEmail());
         registrantRepository.save(request.to());
-        return "접수 완료";
+        return new ResponseMessage(HttpStatus.CREATED.value(), "접수 완료");
     }
 
     private String removeHyphen(String phoneNumber){
         return phoneNumber.replaceAll("-", "");
     }
 
-    private void validation(RegistrantRequest request) throws BadRequestException{
+    // 입력하지 않은 필드 존재
+    private boolean isValidRequest(RegistrantRequest request) {
+        return request.getName() != null && request.getStudentId() != null &&
+                request.getMajor() != null && request.getPhoneNumber() != null &&
+                request.getPosition() != null && request.getGithubId() != null &&
+                request.getTeamName() != null && request.getEmail() != null;
+    }
+
+    // 중복 확인
+    private void isRegistrationDuplicate(RegistrantRequest request) throws BadRequestException{
         if(registrantRepository.existsByStudentId(request.getStudentId())){
             throw new BadRequestException("이미 신청한 학번입니다.");
         }
+    }
+
+    // 신청 기간 확인
+    private boolean isRegistrationPeriod() {
+        // 예시: 현재 날짜가 특정 범위 내인지 확인하는 로직
+        LocalDate now = LocalDate.now();
+        // 신청 시작일과 종료일 설정
+        LocalDate startDate = LocalDate.of(2024, 10, 16); // 예시 시작일
+        LocalDate endDate = LocalDate.of(2024, 10, 31); // 예시 종료일
+        return !now.isBefore(startDate) && !now.isAfter(endDate);
     }
 
     @Async
@@ -50,7 +72,7 @@ public class RegistrantService {
                         1. 참가비: 10,000원
                         2. 참가비 납부: 참가자 본인 이름으로 아래 계좌에 입금
                            3333312689606 카카오뱅크 GDG KNU
-                        3. 입금 기한: 10월 30일까지
+                        3. 입금 기한: 10월 31일까지
                         4. 문의사항: GDG 운영진 (KakaoTalk ID: k.gu_wae)
 
                         팀장님이 대표로 신청하는 것이 아니라 각 팀원들도 개별적으로 신청해 주시기 바랍니다.

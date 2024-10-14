@@ -20,7 +20,7 @@ public class RegistrantController {
     @PostMapping()
     public ResponseEntity<ResponseMessage> register(@Valid @RequestBody RegistrantRequest registrant) {
         try {
-            ResponseMessage message = new ResponseMessage(HttpStatus.CREATED.value(), registrantService.register(registrant));
+            ResponseMessage message = registrantService.register(registrant);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(message);
         } catch (BadRequestException e) {
