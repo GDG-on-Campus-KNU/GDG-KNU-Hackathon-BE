@@ -3,6 +3,7 @@ package com.gdg.hackathon.service;
 import com.gdg.hackathon.dto.RegistrantRequest;
 import com.gdg.hackathon.exception.ResponseMessage;
 import com.gdg.hackathon.repository.RegistrantRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +22,23 @@ public class RegistrantService {
     private RegistrantRepository registrantRepository;
     private final JavaMailSender emailSender;
 
+    @Transactional
     public ResponseMessage register(RegistrantRequest request)throws BadRequestException{
         request.setPhoneNumber(removeHyphen(request.getPhoneNumber()));
-        isRegistrationDuplicate(request);
-        sendRegisterEmail(request.getEmail());
+
+        if(!isValidRequest(request)){
+            return new ResponseMessage(HttpStatus.BAD_REQUEST.value(), "입력하지 않은 필드가 존재합니다.");
+        }
+
+        if(!isRegistrationPeriod()){
+            return new ResponseMessage(HttpStatus.SERVICE_UNAVAILABLE.value(), "아직 신청기간이 아닙니다.");
+        }
+
+        if(!isRegistrationDuplicate(request.getStudentId())){
+            return new ResponseMessage(HttpStatus.CONFLICT.value(), "이미 신청한 학번입니다.")
+        }
         registrantRepository.save(request.to());
+        sendRegisterEmail(request.getEmail());
         return new ResponseMessage(HttpStatus.CREATED.value(), "접수 완료");
     }
 
@@ -42,10 +55,8 @@ public class RegistrantService {
     }
 
     // 중복 확인
-    private void isRegistrationDuplicate(RegistrantRequest request) throws BadRequestException{
-        if(registrantRepository.existsByStudentId(request.getStudentId())){
-            throw new BadRequestException("이미 신청한 학번입니다.");
-        }
+    private boolean isRegistrationDuplicate(Long studentId) throws BadRequestException{
+        return registrantRepository.existsByStudentId(studentId);
     }
 
     // 신청 기간 확인
